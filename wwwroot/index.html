@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>דשבורד משימות</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <main class="shell">
+        <section class="topbar" aria-labelledby="page-title">
+            <div class="brand">
+                <div>
+                    <h1 id="page-title">דשבורד <span>משימות</span></h1>
+                    <p>תצוגת בקרה למשימות פתוחות · זמני טעינה · ביצועי הצגה</p>
+                </div>
+            </div>
+            <button id="refreshButton" type="button">רענון נתונים</button>
+        </section>
+
+        <section class="performance-strip" aria-label="זמני ביצוע">
+            <article>
+                <p>שרת</p>
+                <strong id="serverTime" dir="ltr">0 ms</strong>
+            </article>
+            <article>
+                <p>בקשת API</p>
+                <strong id="requestTime" dir="ltr">0 ms</strong>
+            </article>
+            <article>
+                <p>הצגה בדפדפן</p>
+                <strong id="renderTime" dir="ltr">0 ms</strong>
+            </article>
+        </section>
+
+        <section class="table-panel" aria-labelledby="tasks-title">
+            <div class="table-heading">
+                <div>
+                    <h2 id="tasks-title">משימות פתוחות</h2>
+                    <p id="statusMessage" role="status"></p>
+                </div>
+                <span id="filteredCount" class="result-pill">0 תוצאות</span>
+            </div>
+
+            <div class="table-search-row" aria-label="כלי סינון וחיפוש">
+                <div class="search-wrap">
+                    <span class="search-icon" aria-hidden="true">⌕</span>
+                    <input id="searchInput" type="search" placeholder="חיפוש לפי מספר משימה או כותרת...">
+                    <button id="clearSearchButton" class="icon-button" type="button" aria-label="ניקוי חיפוש">×</button>
+                </div>
+
+                <select id="statusFilter" aria-label="סינון לפי סטטוס">
+                    <option value="all">כל הסטטוסים</option>
+                    <option value="Pending">ממתינה</option>
+                    <option value="InProgress">בטיפול</option>
+                </select>
+
+                <select id="priorityFilter" aria-label="סינון לפי עדיפות">
+                    <option value="all">כל העדיפויות</option>
+                    <option value="High">גבוהה</option>
+                    <option value="Medium">בינונית</option>
+                    <option value="Low">נמוכה</option>
+                </select>
+
+                <select id="sortSelect" aria-label="מיון">
+                    <option value="taskIdAsc">מספר ↑</option>
+                    <option value="taskIdDesc">מספר ↓</option>
+                    <option value="priorityDesc">עדיפות גבוהה</option>
+                    <option value="priorityAsc">עדיפות נמוכה</option>
+                    <option value="titleAsc">כותרת א-ת</option>
+                </select>
+
+                <button id="clearFiltersButton" class="secondary" type="button">נקה</button>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>מספר</th>
+                            <th>כותרת</th>
+                            <th>סטטוס</th>
+                            <th>עדיפות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>

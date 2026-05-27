@@ -1,0 +1,6 @@
+@TaskPerformanceTest_HostAddress = http://localhost:5259
+
+GET {{TaskPerformanceTest_HostAddress}}/api/tasks
+Accept: application/json
+
+###
