@@ -6,14 +6,7 @@ namespace TaskPerformanceTest.Data;
 public static class DatabaseInitializer
 {
     private const int SeedTaskCount = 6000;
-    private const int ActiveTaskCount = 4000;
-
-    private static readonly string[] Statuses =
-    [
-        "Pending",
-        "InProgress",
-        "Completed"
-    ];
+    private const int ActiveTaskCount = 5000;
 
     private static readonly string[] Priorities =
     [
@@ -76,7 +69,7 @@ public static class DatabaseInitializer
     private static TaskItem CreateTask(int index)
     {
         var status = index <= ActiveTaskCount
-            ? Statuses[index % 2]
+            ? (index % 2 == 0 ? "Pending" : "InProgress")
             : "Completed";
         var priority = Priorities[(index / 3) % Priorities.Length];
         var action = Actions[index % Actions.Length];
@@ -101,7 +94,9 @@ public static class DatabaseInitializer
 
         var activeTasks = await dbContext.Tasks.CountAsync(task =>
             task.Status == "Pending" || task.Status == "InProgress");
+        var completedTasks = await dbContext.Tasks.CountAsync(task => task.Status == "Completed");
 
-        return activeTasks == ActiveTaskCount;
+        return activeTasks == ActiveTaskCount
+            && completedTasks == SeedTaskCount - ActiveTaskCount;
     }
 }

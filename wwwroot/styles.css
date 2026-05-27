@@ -289,57 +289,6 @@ select {
     white-space: nowrap;
 }
 
-.row-select {
-    background-image: none;
-    height: 32px;
-    min-width: 112px;
-    padding: 0 10px;
-}
-
-.status-editor {
-    font-weight: 800;
-}
-
-.priority-editor {
-    font-weight: 800;
-}
-
-.row-select.status-pending {
-    background-color: var(--warning-soft);
-    border-color: #fde68a;
-    color: var(--warning);
-}
-
-.row-select.status-inprogress {
-    background-color: var(--primary-soft);
-    border-color: #bfdbfe;
-    color: var(--primary-dark);
-}
-
-.row-select.status-completed {
-    background-color: #e5e7eb;
-    border-color: #d1d5db;
-    color: #4b5563;
-}
-
-.row-select.priority-high {
-    background-color: var(--danger-soft);
-    border-color: #fecaca;
-    color: var(--danger);
-}
-
-.row-select.priority-medium {
-    background-color: var(--warning-soft);
-    border-color: #fde68a;
-    color: var(--warning);
-}
-
-.row-select.priority-low {
-    background-color: var(--success-soft);
-    border-color: #bbf7d0;
-    color: var(--success);
-}
-
 select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
@@ -492,6 +441,23 @@ tbody td {
 .state-msg {
     color: var(--text-dim);
     font-size: 0.9rem;
+}
+
+.table-footer {
+    align-items: center;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    padding: 14px 22px;
+}
+
+.table-footer strong {
+    color: var(--primary-dark);
+    font-size: 1rem;
+    font-weight: 900;
 }
 
 @media (max-width: 800px) {

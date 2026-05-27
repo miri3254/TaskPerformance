@@ -10,6 +10,7 @@ const tableWrap = document.querySelector(".table-wrap");
 const tasksBody = document.querySelector("#tasksBody");
 const statusMessage = document.querySelector("#statusMessage");
 const filteredCount = document.querySelector("#filteredCount");
+const fetchedTotal = document.querySelector("#fetchedTotal");
 
 const serverTime = document.querySelector("#serverTime");
 const requestTime = document.querySelector("#requestTime");
@@ -17,8 +18,7 @@ const renderTime = document.querySelector("#renderTime");
 
 const statusLabels = {
     Pending: "ממתינה",
-    InProgress: "בטיפול",
-    Completed: "הושלמה"
+    InProgress: "בטיפול"
 };
 
 const priorityLabels = {
@@ -56,38 +56,22 @@ function escapeHtml(value) {
         .replaceAll("'", "&#39;");
 }
 
-function option(value, currentValue, label) {
-    return `<option value="${value}"${value === currentValue ? " selected" : ""}>${label}</option>`;
-}
-
-function createRowHtml(task) {
-    return `
-        <tr class="task-row" data-task-id="${task.taskID}">
-            <td><span class="task-id">${task.taskID}</span></td>
-            <td><span class="task-title">${escapeHtml(task.title)}</span></td>
-            <td>
-                <select class="row-select status-editor status-${task.status.toLowerCase()}" data-field="status" aria-label="שינוי סטטוס למשימה ${task.taskID}">
-                    ${option("Pending", task.status, statusLabels.Pending)}
-                    ${option("InProgress", task.status, statusLabels.InProgress)}
-                    ${option("Completed", task.status, statusLabels.Completed)}
-                </select>
-            </td>
-            <td>
-                <select class="row-select priority-editor priority-${task.priority.toLowerCase()}" data-field="priority" aria-label="שינוי עדיפות למשימה ${task.taskID}">
-                    ${option("Low", task.priority, priorityLabels.Low)}
-                    ${option("Medium", task.priority, priorityLabels.Medium)}
-                    ${option("High", task.priority, priorityLabels.High)}
-                </select>
-            </td>
-        </tr>
-    `;
-}
-
 function prepareTask(task) {
+    const statusLabel = statusLabels[task.status] ?? task.status;
+    const priorityLabel = priorityLabels[task.priority] ?? task.priority;
+    const escapedTitle = escapeHtml(task.title);
+
     return {
         ...task,
         searchText: `${task.taskID} ${task.title}`.toLowerCase(),
-        rowHtml: createRowHtml(task)
+        rowHtml: `
+            <tr class="task-row">
+                <td><span class="task-id">${task.taskID}</span></td>
+                <td><span class="task-title">${escapedTitle}</span></td>
+                <td><span class="badge badge-${task.status.toLowerCase()}">${statusLabel}</span></td>
+                <td><span class="priority-chip priority-${task.priority.toLowerCase()}">${priorityLabel}</span></td>
+            </tr>
+        `
     };
 }
 
@@ -97,12 +81,11 @@ function getFilteredTasks() {
     const selectedPriority = priorityFilter.value;
 
     const filtered = allTasks.filter(task => {
-        const isOpen = task.status === "Pending" || task.status === "InProgress";
         const matchesQuery = !query || task.searchText.includes(query);
         const matchesStatus = selectedStatus === "all" || task.status === selectedStatus;
         const matchesPriority = selectedPriority === "all" || task.priority === selectedPriority;
 
-        return isOpen && matchesQuery && matchesStatus && matchesPriority;
+        return matchesQuery && matchesStatus && matchesPriority;
     });
 
     return filtered.sort((a, b) => {
@@ -123,11 +106,9 @@ function getFilteredTasks() {
 }
 
 function spacerRow(height) {
-    if (height <= 0) {
-        return "";
-    }
-
-    return `<tr class="spacer-row"><td colspan="4" style="height:${height}px"></td></tr>`;
+    return height > 0
+        ? `<tr class="spacer-row"><td colspan="4" style="height:${height}px"></td></tr>`
+        : "";
 }
 
 function renderVisibleRows() {
@@ -177,48 +158,6 @@ function scheduleVisibleRows() {
     scrollFrameId = requestAnimationFrame(renderVisibleRows);
 }
 
-async function updateTask(taskId, updates) {
-    const task = allTasks.find(item => item.taskID === taskId);
-
-    if (!task) {
-        return;
-    }
-
-    const previousTask = { ...task };
-    const nextTask = prepareTask({ ...task, ...updates });
-    const taskIndex = allTasks.findIndex(item => item.taskID === taskId);
-
-    allTasks[taskIndex] = nextTask;
-    applyFilters();
-
-    try {
-        const response = await fetch(`/api/tasks/${taskId}`, {
-            method: "PUT",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                status: nextTask.status,
-                priority: nextTask.priority
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error("שמירת השינוי נכשלה.");
-        }
-
-        if (nextTask.status === "Completed") {
-            allTasks = allTasks.filter(item => item.taskID !== taskId);
-            applyFilters();
-        }
-    } catch (error) {
-        allTasks[taskIndex] = prepareTask(previousTask);
-        statusMessage.textContent = error.message;
-        applyFilters();
-    }
-}
-
 async function loadTasks() {
     refreshButton.disabled = true;
     statusMessage.textContent = "טוען משימות...";
@@ -240,6 +179,7 @@ async function loadTasks() {
         allTasks = data.tasks.map(prepareTask);
         lastServerTimeMs = data.serverTimeMs;
         lastRequestMs = requestFinished - requestStarted;
+        fetchedTotal.textContent = data.count.toLocaleString();
         applyFilters();
     } catch (error) {
         statusMessage.textContent = error.message;
@@ -270,20 +210,5 @@ statusFilter.addEventListener("change", scheduleApplyFilters);
 priorityFilter.addEventListener("change", scheduleApplyFilters);
 sortSelect.addEventListener("change", scheduleApplyFilters);
 tableWrap.addEventListener("scroll", scheduleVisibleRows, { passive: true });
-tasksBody.addEventListener("change", event => {
-    const editor = event.target.closest(".row-select");
-
-    if (!editor) {
-        return;
-    }
-
-    const row = editor.closest("[data-task-id]");
-    const taskId = Number(row.dataset.taskId);
-    const field = editor.dataset.field;
-
-    updateTask(taskId, {
-        [field]: editor.value
-    });
-});
 
 loadTasks();
